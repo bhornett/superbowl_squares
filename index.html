@@ -6,7 +6,7 @@
   <title>Super Bowl Squares - Live Update</title>
   <style>
     :root {
-      --cell-size: clamp(20px, 8.5vw, 96px);   /* square size – fits 11 columns + labels */
+      --cell-size: clamp(48px, 8.5vw, 96px);   /* square size – fits 11 columns + labels */
       --gap: 1px;
     }
 
@@ -335,7 +335,7 @@ const gridMap = {
     const cornerTh = document.createElement("th");
     cornerTh.className = "header corner-label";
     cornerTh.id = "cornerLabel";
-    cornerTh.innerHTML = "Loading...";
+    //cornerTh.innerHTML = "Loading...";
 
     const colHeaderRow = document.createElement("tr");
     colHeaderRow.appendChild(cornerTh);
