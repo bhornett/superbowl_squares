@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>10×10 Grid OCR Reader – Printed Names</title>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.3.0/dist/tesseract.min.js"></script>
+    <script src="./lib/tesseract.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -145,14 +145,15 @@
         try {
             setStatus("Initializing OCR worker...", 'processing');
 
-            const worker = await Tesseract.createWorker('eng', 1, {
-                workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.3.0/dist/worker.min.js',
-                langPath: 'https://tessdata.projectnaptha.com/4.0.0',
-                corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.3.0/tesseract-core.wasm.js',
-                tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
-                tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz -.,\'’',
-                preserve_interword_spaces: '1',
-            });
+			const worker = await Tesseract.createWorker('eng', 1, {
+				workerPath: './lib/worker.min.js',
+				langPath: './lib',                    // folder containing eng.traineddata.gz
+				corePath: './lib/tesseract-core.wasm.js',
+				tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
+				tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz -.,\'’',
+				preserve_interword_spaces: '1',
+				// Optional: cacheMethod: 'none'  // if you see traineddata caching issues later
+			});
 
             setStatus("OCR ready. Processing cells...", 'processing');
 
