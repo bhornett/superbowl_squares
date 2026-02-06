@@ -1,225 +1,346 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grid OCR - Detect Drawn Black Grid & Extract Text Inside Cells</title>
-    <script src="./lib/tesseract.min.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background: #f9f9f9; }
-        canvas { border: 1px solid #aaa; margin: 20px auto; display: block; max-width: 90vw; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        #status { margin: 20px auto; padding: 15px; max-width: 700px; border-radius: 8px; font-weight: bold; font-size: 1.1em; }
-        #status.processing { background: #fff3cd; color: #856404; }
-        #status.success   { background: #d4edda; color: #155724; }
-        #status.error     { background: #f8d7da; color: #721c24; }
-        #output, #tableOutput { margin: 30px auto; max-width: 1000px; text-align: left; }
-        pre { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px; font-family: monospace; white-space: pre; overflow-x: auto; font-size: 1.05em; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; font-size: 1.1em; }
-        th { background: #e0f2ff; font-weight: bold; }
-        caption { font-size: 1.3em; margin-bottom: 10px; font-weight: bold; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Super Bowl Squares - Live Update</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+    table {
+      margin: 0 auto;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      font-size: 1.05em;
+    }
+    th, td {
+      border: 1px solid #bdc3c7;
+      padding: 12px 16px;
+      min-width: 120px;
+      text-align: center;
+      position: relative;
+    }
+    th {
+      background: #3498db;
+      color: white;
+      font-weight: bold;
+    }
+    tr:nth-child(even) {
+      background: #f9fbfc;
+    }
+    .empty {
+      color: #95a5a6;
+      font-style: italic;
+    }
+    .header {
+      background: #2c3e50;
+      color: white;
+      font-weight: bold;
+    }
+    .row-label {
+      font-weight: bold;
+      min-width: 60px !important;
+    }
+    .pulsate {
+      animation: pulsate 2s infinite ease-in-out;
+      font-weight: bold;
+    }
+    @keyframes pulsate {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .current-winner-border {
+      border: 4px solid #28a745 !important;
+      box-shadow: 0 0 15px #28a745;
+    }
+    .digit-bold {
+      font-weight: bold;
+      color: #006400;
+    }
+    .quarter-label {
+      font-size: 0.75em;
+      color: #006400;
+      font-weight: bold;
+      display: block;
+      margin-top: 4px;
+      background: rgba(40, 167, 69, 0.1);
+      border-radius: 4px;
+      padding: 2px 4px;
+    }
+    #controls {
+      margin: 20px 0 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    #controls input, #controls button {
+      padding: 10px 14px;
+      font-size: 1em;
+      border: 1px solid #bdc3c7;
+      border-radius: 4px;
+    }
+    #controls button {
+      background: #27ae60;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #controls button:hover {
+      background: #219a52;
+    }
+    #info {
+      font-size: 1.1em;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    #scoreDisplay {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin: 15px 0;
+      color: #2c3e50;
+    }
+    #quarterWinners {
+      font-size: 1.1em;
+      line-height: 1.6;
+      margin: 20px 0;
+      min-height: 50px;
+    }
+    #status {
+      font-size: 1em;
+      color: #666;
+      margin: 10px 0;
+    }
+    .corner-label {
+      font-size: 1.1em;
+      line-height: 1.4;
+      white-space: pre;
+    }
+  </style>
 </head>
 <body>
-    <h1>Upload Image of Drawn Grid (Black Lines)</h1>
-    <p>The app now detects the grid lines automatically and extracts text only from inside the cells (skipping borders & headers).</p>
 
-    <input type="file" id="upload" accept="image/*">
-    <canvas id="gridCanvas" width="800" height="800"></canvas>
+  <h1>Super Bowl Squares - Live Update</h1>
 
-    <div id="status">Waiting for image...</div>
-    <div id="output"><h2>Results will appear here</h2></div>
-    <div id="tableOutput"></div>
+  <div id="controls">
+    <input type="text" id="gameId" value="401772987" placeholder="Enter ESPN Game ID">
+    <button id="refreshBtn">Refresh Now</button>
+  </div>
 
-    <script>
-        const GRID_SIZE = 10; // inner data cells
-        const EXPECTED_DIV = GRID_SIZE + 1; // 11 lines for 10 cells + headers
+  <div id="info">Auto-refreshing every 10 seconds</div>
 
-        let grid = Array.from({length: GRID_SIZE}, () => Array(GRID_SIZE).fill(''));
+  <div id="scoreDisplay">Score: —</div>
+  <div id="quarterWinners"></div>
+  <div id="status">Loading game data...</div>
 
-        const status = document.getElementById('status');
-        const output = document.getElementById('output');
-        const tableOut = document.getElementById('tableOutput');
-        const canvas = document.getElementById('gridCanvas');
-        const ctx = canvas.getContext('2d');
+  <table id="gridTable"></table>
 
-        function setStatus(msg, cls = 'processing') {
-            status.textContent = msg;
-            status.className = cls;
+  <script>
+    const DEFAULT_GAME_ID = "401772987";
+
+    const gridMap = {
+      "4-1": "Harry", "4-4": "Hermione", "4-7": "Ron", "4-2": "Ginny",
+      "4-9": "Luna", "4-6": "Neville", "4-8": "Dudley", "4-3": "Ginny",
+      "4-0": "Arthur", "4-5": "Kreacher",
+      "0-1": "Padma", "0-4": "Parvati", "0-7": "Kingsley", "0-2": "Seamus",
+      "0-9": "Dean", "0-6": "Viktor", "0-8": "Hermione", "0-3": "Draco",
+      "0-0": "Sybill", "0-5": "Harry",
+      "2-1": "Molly", "2-4": "Arthur", "2-7": "George", "2-2": "Ron",
+      "2-9": "Bill", "2-6": "Minerva", "2-8": "Hagrid", "2-3": "Luna",
+      "2-0": "Percy", "2-5": "Padma",
+      "5-1": "Cho", "5-4": "Charlie", "5-7": "Dudley", "5-2": "Sybill",
+      "5-9": "Harry", "5-6": "Lavender", "5-8": "Neville", "5-3": "Cho",
+      "5-0": "Hermione", "5-5": "Teddy",
+      "1-1": "Seamus", "1-4": "Fleur", "1-7": "Nicholas", "1-2": "Hermione",
+      "1-9": "Draco", "1-6": "Parvati", "1-8": "Cho", "1-3": "Ron",
+      "1-0": "Molly", "1-5": "Neville",
+      "8-1": "Ginny", "8-4": "Kingsley", "8-7": "Luna", "8-2": "Molly",
+      "8-9": "Arthur", "8-6": "Ginny", "8-8": "Percy", "8-3": "George",
+      "8-0": "Viktor", "8-5": "Seamus",
+      "6-1": "Viktor", "6-4": "Peeves", "6-7": "Teddy", "6-2": "Ron",
+      "6-9": "Padma", "6-6": "Fleur", "6-8": "Hermione", "6-3": "Harry",
+      "6-0": "Minerva", "6-5": "Dudley",
+      "3-1": "Charlie", "3-4": "Hermione", "3-7": "Hagrid", "3-2": "Neville",
+      "3-9": "Harry", "3-6": "Grawp", "3-8": "Dean", "3-3": "Aberforth",
+      "3-0": "Parvati", "3-5": "Hermione",
+      "9-1": "Dean", "9-4": "Harry", "9-7": "Ginny", "9-2": "Kreacher",
+      "9-9": "Seamus", "9-6": "Aberforth", "9-8": "Charlie", "9-3": "Draco",
+      "9-0": "Luna", "9-5": "Dean",
+      "7-1": "Neville", "7-4": "Horace", "7-7": "Dean", "7-2": "Ginny",
+      "7-9": "Ron", "7-6": "Luna", "7-8": "Hermione", "7-3": "Fleur",
+      "7-0": "Arthur", "7-5": "Ginny"
+    };
+
+    const rowOrder = [4, 0, 2, 5, 1, 8, 6, 3, 9, 7];
+    const colOrder = [1, 4, 7, 2, 9, 6, 8, 3, 0, 5];
+
+    const table = document.getElementById("gridTable");
+
+    // Top-left corner with team labels and arrows
+    const cornerTh = document.createElement("th");
+    cornerTh.className = "header corner-label";
+    cornerTh.id = "cornerLabel";
+    cornerTh.innerHTML = "Loading teams...";
+    cornerTh.title = "Columns → team on top\nRows ↓ team on left";
+
+    // Build column headers
+    const colHeaderRow = document.createElement("tr");
+    colHeaderRow.appendChild(cornerTh);
+    colOrder.forEach(colNum => {
+      const th = document.createElement("th");
+      th.textContent = colNum;
+      th.className = "header";
+      colHeaderRow.appendChild(th);
+    });
+    table.appendChild(colHeaderRow);
+
+    // Build data rows
+    rowOrder.forEach(row => {
+      const tr = document.createElement("tr");
+      const rowTh = document.createElement("th");
+      rowTh.textContent = row;
+      rowTh.className = "header row-label";
+      tr.appendChild(rowTh);
+
+      colOrder.forEach(col => {
+        const key = `${row}-${col}`;
+        const td = document.createElement("td");
+        td.textContent = gridMap[key] || "(empty)";
+        if (!gridMap[key]) td.className = "empty";
+        td.dataset.row = row;
+        td.dataset.col = col;
+        tr.appendChild(td);
+      });
+
+      table.appendChild(tr);
+    });
+
+    // Find name from grid for given last digits
+    function getNameFromSquare(rowDigit, colDigit) {
+      const row = parseInt(rowDigit);
+      const col = parseInt(colDigit);
+      const key = `${row}-${col}`;
+      return gridMap[key] || "(empty)";
+    }
+
+    // Fetch and update
+    async function updateGame() {
+      const gameId = document.getElementById("gameId")?.value?.trim() || DEFAULT_GAME_ID;
+      document.getElementById("status").textContent = "Refreshing...";
+
+      try {
+        const url = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const data = await res.json();
+
+        const comp = data.header?.competitions?.[0] || {};
+        const competitors = comp.competitors || [];
+        const home = competitors.find(c => c.homeAway === "home") || {};
+        const away = competitors.find(c => c.homeAway === "away") || {};
+
+        const homeScore = home.score || 0;
+        const awayScore = away.score || 0;
+        const homeName = home.team?.displayName || "Home";
+        const awayName = away.team?.displayName || "Away";
+
+        // Update corner label dynamically
+        document.getElementById("cornerLabel").innerHTML = 
+          `${awayName} →<br>↓ ${homeName}`;
+
+        document.getElementById("scoreDisplay").textContent = 
+          `${awayName} ${awayScore} – ${homeScore} ${homeName}`;
+
+        // Clear previous quarter labels
+        document.querySelectorAll("#gridTable td .quarter-label").forEach(el => el.remove());
+
+        // Quarter-by-quarter (only if data exists)
+        const homeQuarters = home.linescores || [];
+        const awayQuarters = away.linescores || [];
+
+        let html = "";
+
+        if (homeQuarters.length > 0 || awayQuarters.length > 0) {
+          html = "<strong>Quarter-by-Quarter Grid Winners:</strong><br>";
+          let cumulativeHome = 0;
+          let cumulativeAway = 0;
+
+          const maxQ = Math.max(homeQuarters.length, awayQuarters.length, 4);
+
+          for (let q = 0; q < maxQ; q++) {
+            const homeQ = parseInt(homeQuarters[q]?.displayValue || "0", 10);
+            const awayQ = parseInt(awayQuarters[q]?.displayValue || "0", 10);
+
+            cumulativeHome += homeQ;
+            cumulativeAway += awayQ;
+
+            const qLabel = q < 4 ? `Q${q+1}` : (q === 4 ? "OT" : "Final");
+
+            const awayLast = cumulativeAway % 10;
+            const homeLast = cumulativeHome % 10;
+            const winnerName = getNameFromSquare(awayLast, homeLast);
+
+            const awayScoreText = cumulativeAway.toString().slice(0, -1) + `<span class="digit-bold">${awayLast}</span>`;
+            const homeScoreText = cumulativeHome.toString().slice(0, -1) + `<span class="digit-bold">${homeLast}</span>`;
+
+            html += `${qLabel}: ${awayName} ${awayScoreText} – ${homeName} ${homeScoreText} → ${winnerName}<br>`;
+
+            // Add label inside winning cell
+            document.querySelectorAll("#gridTable td").forEach(cell => {
+              if (parseInt(cell.dataset.row) === awayLast && parseInt(cell.dataset.col) === homeLast) {
+                const label = document.createElement("span");
+                label.className = "quarter-label";
+                label.textContent = `${qLabel} Winner`;
+                cell.appendChild(label);
+              }
+            });
+          }
         }
 
-        document.getElementById('upload').addEventListener('change', e => {
-            const file = e.target.files[0];
-            if (!file) return setStatus('No file.', 'error');
+        document.getElementById("quarterWinners").innerHTML = html;
 
-            setStatus('Loading image...', 'processing');
-            const img = new Image();
-            img.onload = () => {
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                detectAndProcessGrid();
-            };
-            img.onerror = () => setStatus('Image load failed.', 'error');
-            img.src = URL.createObjectURL(file);
+        // Pulsate + green border for current/final winning cell
+        document.querySelectorAll(".pulsate, .current-winner-border").forEach(el => {
+          el.classList.remove("pulsate", "current-winner-border");
         });
 
-        function detectAndProcessGrid() {
-            setStatus('Detecting grid lines...', 'processing');
+        document.querySelectorAll("#gridTable td").forEach(cell => {
+          if (parseInt(cell.dataset.row) === awayScore % 10 && parseInt(cell.dataset.col) === homeScore % 10) {
+            cell.classList.add("pulsate", "current-winner-border");
+          }
+        });
 
-            // 1. Binarize to highlight black lines
-            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const pixels = imgData.data;
-            for (let i = 0; i < pixels.length; i += 4) {
-                const gray = 0.299 * pixels[i] + 0.587 * pixels[i+1] + 0.114 * pixels[i+2];
-                const bin = gray < 140 ? 0 : 255; // adjust threshold for your black lines
-                pixels[i] = pixels[i+1] = pixels[i+2] = bin;
-            }
-            ctx.putImageData(imgData, 0, 0);
+        // Refresh time
+        const now = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+        document.getElementById("status").textContent = `Last refresh: ${now}`;
 
-            // 2. Projection profiles to find horizontal & vertical line positions
-            const vProj = new Array(canvas.width).fill(0);
-            const hProj = new Array(canvas.height).fill(0);
+      } catch (err) {
+        console.error(err);
+        document.getElementById("status").textContent = `Error: ${err.message || "Failed to load"}`;
+      }
+    }
 
-            for (let y = 0; y < canvas.height; y++) {
-                for (let x = 0; x < canvas.width; x++) {
-                    const idx = (y * canvas.width + x) * 4;
-                    if (pixels[idx] === 0) { // dark pixel → line
-                        vProj[x]++;
-                        hProj[y]++;
-                    }
-                }
-            }
+    // Initial load
+    updateGame();
 
-            // 3. Find strong peaks (line positions) - simple local max with threshold
-            const vLines = findLinePositions(vProj, canvas.width, EXPECTED_DIV);
-            const hLines = findLinePositions(hProj, canvas.height, EXPECTED_DIV);
+    // Auto-refresh every 10 seconds
+    setInterval(updateGame, 10000);
 
-            if (vLines.length < EXPECTED_DIV || hLines.length < EXPECTED_DIV) {
-                setStatus('Could not detect full grid (found ' + vLines.length + ' vert / ' + hLines.length + ' horiz lines). Try clearer image.', 'error');
-                return;
-            }
+    // Manual refresh
+    document.getElementById("refreshBtn").addEventListener("click", updateGame);
+  </script>
 
-            setStatus('Grid detected. Extracting text inside cells...', 'processing');
-
-            // 4. Process inner 10×10 cells (skip first header row/col)
-            (async () => {
-                const worker = await Tesseract.createWorker('eng', 1, {
-                    workerPath: './lib/worker.min.js',
-                    langPath: './lib',
-                    corePath: './lib/tesseract-core.wasm.js',
-                    tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
-                    preserve_interword_spaces: '1',
-                });
-
-                for (let r = 1; r < EXPECTED_DIV; r++) { // rows 1..10
-                    for (let c = 1; c < EXPECTED_DIV; c++) { // cols 1..10
-                        const gridR = r - 1;
-                        const gridC = c - 1;
-
-                        // Cell bounds: between lines, shrink margin to exclude borders
-                        const margin = 4; // pixels inward
-                        const x = vLines[c-1] + margin;
-                        const y = hLines[r-1] + margin;
-                        const w = vLines[c] - vLines[c-1] - 2*margin;
-                        const h = hLines[r] - hLines[r-1] - 2*margin;
-
-                        if (w < 10 || h < 10) {
-                            grid[gridR][gridC] = '?';
-                            continue;
-                        }
-
-                        const cellCanvas = document.createElement('canvas');
-                        cellCanvas.width = w;
-                        cellCanvas.height = h;
-                        const cellCtx = cellCanvas.getContext('2d');
-                        cellCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
-
-                        try {
-                            const { data: { text } } = await worker.recognize(cellCanvas);
-                            let cleaned = text.trim().replace(/\s+/g, ' ');
-                            grid[gridR][gridC] = cleaned || '?';
-                        } catch (err) {
-                            grid[gridR][gridC] = '!';
-                        }
-                    }
-                }
-
-                await worker.terminate();
-                setStatus('Done!', 'success');
-                displayGrid();
-            })();
-        }
-
-        function findLinePositions(proj, maxLen, expectedCount) {
-            const positions = [];
-            const minStrength = Math.max(...proj) * 0.4; // rough threshold ~40% of max
-            let last = -999;
-
-            for (let i = 1; i < maxLen - 1; i++) {
-                if (proj[i] > minStrength && proj[i] > proj[i-1] && proj[i] > proj[i+1] && i - last > 15) {
-                    positions.push(i);
-                    last = i;
-                }
-            }
-
-            // If too few, lower threshold or add ends
-            if (positions.length < expectedCount) {
-                positions.unshift(0);
-                positions.push(maxLen - 1);
-            }
-
-            // Sort & take top/expected
-            positions.sort((a,b)=>a-b);
-            return positions.slice(0, expectedCount);
-        }
-
-        function displayGrid() {
-            let text = '10×10 Grid (text inside detected cells):\n\n';
-            grid.forEach((row, i) => {
-                text += `${(i+1).toString().padStart(2)} | ${row.map(n => n.padEnd(22,' ')).join('  ')}\n`;
-            });
-
-            const pre = document.createElement('pre');
-            pre.textContent = text;
-            output.innerHTML = '';
-            output.appendChild(pre);
-
-            // Table (same as before)
-            tableOut.innerHTML = '';
-            const table = document.createElement('table');
-            const cap = document.createElement('caption');
-            cap.textContent = 'Detected Grid Cells';
-            table.appendChild(cap);
-
-            const thead = document.createElement('thead');
-            const hr = document.createElement('tr');
-            hr.appendChild(document.createElement('th'));
-            for (let c = 1; c <= GRID_SIZE; c++) {
-                const th = document.createElement('th');
-                th.textContent = `Col ${c}`;
-                hr.appendChild(th);
-            }
-            thead.appendChild(hr);
-            table.appendChild(thead);
-
-            const tbody = document.createElement('tbody');
-            grid.forEach((row, r) => {
-                const tr = document.createElement('tr');
-                const th = document.createElement('th');
-                th.textContent = `Row ${r+1}`;
-                tr.appendChild(th);
-                row.forEach(v => {
-                    const td = document.createElement('td');
-                    td.textContent = v === '!' ? 'OCR ERR' : (v || '(empty)');
-                    if (v === '!') td.style.color = 'red';
-                    tr.appendChild(td);
-                });
-                tbody.appendChild(tr);
-            });
-            table.appendChild(tbody);
-            tableOut.appendChild(table);
-
-            console.log('Grid:', grid);
-        }
-    </script>
 </body>
 </html>
