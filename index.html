@@ -156,23 +156,41 @@
       white-space: pre;
     }
 
-    @media (max-width: 480px) {
-      body { padding: 12px 6px; }
-      h1 { font-size: 1.4em; margin-bottom: 10px; }
-      table { font-size: 0.82em; }
-      th, td { padding: 5px 3px; }
-      .row-label { width: 24px; min-width: 24px; font-size: 0.88em; }
-      #controls { flex-direction: column; gap: 8px; }
-      #controls input, #controls button { width: 100%; max-width: 320px; }
-      #scoreDisplay { font-size: 1.2em; }
-      .quarter-label { font-size: 0.6em; padding: 1px 2px; }
-      .corner-label { font-size: 0.9em; }
-    }
+/* Force centering for all content above the grid */
+#controls, #info, #scoreDisplay, #quarterWinners, #status {
+  text-align: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  display: block !important; /* override any flex issues */
+}
 
-    @media (max-width: 360px) {
-      table { font-size: 0.78em; }
-      th, td { padding: 4px 2px; }
-    }
+/* Ensure controls children are centered */
+#controls {
+  justify-content: center !important;
+}
+
+/* Make sure inputs/buttons take full available width but stay centered */
+#controls input, #controls button {
+  margin: 0 auto;
+  display: block;
+}
+
+/* Extra centering safety on very small screens */
+@media (max-width: 480px) {
+  #controls {
+    flex-direction: column;
+    align-items: center;
+  }
+  #controls input, #controls button {
+    width: 90%;
+    max-width: 340px;
+    margin: 6px auto;
+  }
+  #info, #scoreDisplay, #quarterWinners, #status {
+    padding: 0 10px;
+    max-width: 95%;
+  }
+}
   </style>
 </head>
 <body>
