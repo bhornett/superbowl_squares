@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10×10 Grid OCR Reader – Printed Names</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.3.0/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+        canvas {
+            border: 1px solid #aaa;
+            margin: 20px auto;
+            display: block;
+            max-width: 90vw;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        #status {
+            margin: 20px auto;
+            padding: 15px;
+            max-width: 700px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        #status.processing { background: #fff3cd; color: #856404; }
+        #status.success   { background: #d4edda; color: #155724; }
+        #status.error     { background: #f8d7da; color: #721c24; }
+        #output, #tableOutput {
+            margin: 30px auto;
+            max-width: 1000px;
+            text-align: left;
+        }
+        pre {
+            background: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre;
+            overflow-x: auto;
+            font-size: 1.05em;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+            font-size: 1.1em;
+        }
+        th {
+            background: #e0f2ff;
+            font-weight: bold;
+        }
+        caption {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload Image of 10×10 Grid with Printed Names</h1>
+    <p>Upload a clear photo/scan of a grid with row/column headers and printed names in the cells.</p>
+
+    <input type="file" id="upload" accept="image/*">
+    <canvas id="gridCanvas" width="600" height="600"></canvas>
+
+    <div id="status">Waiting for image upload...</div>
+    <div id="output">
+        <h2>Results will appear here</h2>
+    </div>
+    <div id="tableOutput"></div>
+
+  <script>
+    const GRID_CELLS = 10;
+    const TOTAL_DIVISIONS = 11;
+    let grid = Array.from({length: GRID_CELLS}, () => Array(GRID_CELLS).fill(''));
+
+    const statusDiv = document.getElementById('status');
+    const outputDiv = document.getElementById('output');
+    const tableDiv  = document.getElementById('tableOutput');
+
+    function setStatus(message, type = 'processing') {
+        statusDiv.textContent = message;
+        statusDiv.className = type;
+    }
+
+    // Helper: Wait for Tesseract to be defined (up to 15 seconds)
+    async function waitForTesseract(timeoutMs = 15000) {
+        const start = Date.now();
+        while (Date.now() - start < timeoutMs) {
+            if (typeof Tesseract !== 'undefined') {
+                return true;
+            }
+            await new Promise(r => setTimeout(r, 200));
+        }
+        return false;
+    }
+
+    document.getElementById('upload').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) {
+            setStatus("No file selected.", 'error');
+            return;
+        }
+
+        setStatus("Loading image...", 'processing');
+
+        const img = new Image();
+        img.onload = async () => {
+            const canvas = document.getElementById('gridCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            setStatus("Checking Tesseract library...", 'processing');
+
+            const libReady = await waitForTesseract();
+            if (!libReady) {
+                setStatus("Tesseract library failed to load from CDN (Tesseract is not defined). Try refreshing the page, using a different browser, or check your internet connection.", 'error');
+                return;
+            }
+
+            setStatus("Starting OCR processing (30–120 seconds depending on device)...", 'processing');
+            await processGrid(ctx);
+        };
+        img.onerror = () => {
+            setStatus("Failed to load the image. Make sure it's a valid image file.", 'error');
+        };
+        img.src = URL.createObjectURL(file);
+    });
+
+    async function processGrid(ctx) {
+        try {
+            setStatus("Initializing OCR worker...", 'processing');
+
+            const worker = await Tesseract.createWorker('eng', 1, {
+                workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.3.0/dist/worker.min.js',
+                langPath: 'https://tessdata.projectnaptha.com/4.0.0',
+                corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.3.0/tesseract-core.wasm.js',
+                tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
+                tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz -.,\'’',
+                preserve_interword_spaces: '1',
+            });
+
+            setStatus("OCR ready. Processing cells...", 'processing');
+
+            const cellWidth  = ctx.canvas.width  / TOTAL_DIVISIONS;
+            const cellHeight = ctx.canvas.height / TOTAL_DIVISIONS;
+
+            for (let row = 1; row < TOTAL_DIVISIONS; row++) {
+                setStatus(`Processing row ${row} of ${GRID_CELLS}...`, 'processing');
+                for (let col = 1; col < TOTAL_DIVISIONS; col++) {
+                    const gridRow = row - 1;
+                    const gridCol = col - 1;
+
+                    const x = col * cellWidth;
+                    const y = row * cellHeight;
+
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width  = Math.floor(cellWidth);
+                    tempCanvas.height = Math.floor(cellHeight);
+                    const tempCtx = tempCanvas.getContext('2d');
+
+                    tempCtx.drawImage(
+                        ctx.canvas,
+                        x, y, cellWidth, cellHeight,
+                        0, 0, tempCanvas.width, tempCanvas.height
+                    );
+
+                    try {
+                        const { data: { text } } = await worker.recognize(tempCanvas);
+                        let cleaned = text.trim()
+                                          .replace(/\s+/g, ' ')
+                                          .replace(/\n/g, ' ');
+                        grid[gridRow][gridCol] = cleaned || '?';
+                    } catch (err) {
+                        console.error(`Cell [${gridRow+1},${gridCol+1}] OCR failed:`, err);
+                        grid[gridRow][gridCol] = '!';
+                    }
+                }
+            }
+
+            await worker.terminate();
+
+            setStatus("Done! Results below.", 'success');
+            displayResults();
+
+        } catch (err) {
+            console.error("OCR setup/processing failed:", err);
+            setStatus(`OCR error: ${err.message || 'Failed to initialize Tesseract worker'}. This is often a network/CDN issue — try refreshing or a different browser.`, 'error');
+        }
+    }
+
+    // displayResults() function remains the same as in the previous version
+    function displayResults() {
+        // (paste the displayResults function from your previous code here – the pre + table part)
+        // ... [omitted for brevity – copy it from the last working version you had]
+    }
+</script>
+</body>
+</html>
