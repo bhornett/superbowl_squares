@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Super Bowl Squares - Live Update</title>
   <style>
+    :root {
+      --cell-base: 9vw;
+      --cell-min: 32px;
+      --cell-max: 50px;
+      --gap: 2px;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
       font-family: Arial, Helvetica, sans-serif;
       background: #f8f9fa;
@@ -12,12 +21,69 @@
       padding: 15px 8px;
       text-align: center;
       -webkit-text-size-adjust: 100%;
+      touch-action: manipulation;
     }
+
     h1 {
       color: #2c3e50;
       margin: 0 0 12px;
-      font-size: 1.6em;
+      font-size: clamp(1.4rem, 5vw, 1.8rem);
     }
+
+    #controls, #info, #scoreDisplay, #quarterWinners, #status {
+      max-width: 100%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 12px 0 20px;
+    }
+
+    #controls input, #controls button {
+      padding: 10px 14px;
+      font-size: clamp(0.95rem, 3.5vw, 1rem);
+      border: 1px solid #bdc3c7;
+      border-radius: 6px;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    #controls button {
+      background: #27ae60;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    #controls button:hover {
+      background: #219a52;
+    }
+
+    #info, #status {
+      font-size: clamp(0.85rem, 3vw, 0.95rem);
+      color: #555;
+      margin: 6px 0;
+    }
+
+    #scoreDisplay {
+      font-size: clamp(1.2rem, 4.5vw, 1.5rem);
+      font-weight: bold;
+      margin: 10px 0;
+      color: #2c3e50;
+    }
+
+    #quarterWinners {
+      font-size: clamp(0.9rem, 3.2vw, 1rem);
+      line-height: 1.4;
+      margin: 12px 0;
+      min-height: 40px;
+    }
+
     table {
       margin: 0 auto;
       border-collapse: collapse;
@@ -26,153 +92,86 @@
       width: 100%;
       max-width: 100%;
     }
+
     th, td {
       border: 1px solid #bdc3c7;
-      padding: 6px 4px;
+      padding: clamp(4px, 1.5vw, 8px);
       text-align: center;
-      font-size: 0.9em;
-      min-width: 0;
+      font-size: clamp(0.78rem, 2.8vw, 0.9rem);
+      width: calc(var(--cell-base) + var(--gap) * 2);
+      min-width: var(--cell-min);
+      max-width: var(--cell-max);
+      height: calc(var(--cell-base) + var(--gap) * 2);
+      max-height: var(--cell-max);
     }
-    th {
-      background: #3498db;
-      color: white;
-      font-weight: bold;
-    }
+
     .header {
       background: #2c3e50;
       color: white;
       font-weight: bold;
     }
+
     .row-label {
       font-weight: bold;
-      min-width: 26px;
-      font-size: 0.95em;
+      width: 28px;
+      min-width: 28px;
+      max-width: 36px;
+      font-size: clamp(0.85rem, 3vw, 1rem);
     }
-    .highlight {
-      background-color: #28a745 !important;
-      color: white;
-      font-weight: bold;
-      box-shadow: 0 0 10px #28a745;
-    }
-    .pulsate {
-      animation: pulsate 2s infinite ease-in-out;
-      font-weight: bold;
-    }
-    @keyframes pulsate {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
+
     .digit-bold {
       font-weight: bold;
       color: #006400;
     }
+
     .quarter-label {
-      font-size: 0.65em;
+      font-size: clamp(0.58rem, 2vw, 0.68rem);
       color: #006400;
       font-weight: bold;
       display: block;
-      margin-top: 3px;
+      margin-top: 2px;
       background: rgba(40, 167, 69, 0.1);
       border-radius: 3px;
       padding: 1px 3px;
     }
-    #controls {
-      margin: 12px 0 20px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-    }
-    #controls input, #controls button {
-      padding: 8px 12px;
-      font-size: 0.95em;
-      border: 1px solid #bdc3c7;
-      border-radius: 4px;
-      min-width: 120px;
-    }
-    #controls button {
-      background: #27ae60;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    #controls button:hover {
-      background: #219a52;
-    }
-    #info {
-      font-size: 0.9em;
-      color: #555;
-      margin-bottom: 8px;
-    }
-    #scoreDisplay {
-      font-size: 1.3em;
+
+    .pulsate {
+      animation: pulsate 2s infinite ease-in-out;
       font-weight: bold;
-      margin: 10px 0;
-      color: #2c3e50;
     }
-    #quarterWinners {
-      font-size: 0.95em;
-      line-height: 1.4;
-      margin: 12px 0;
-      min-height: 40px;
+
+    @keyframes pulsate {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
-    #status {
-      font-size: 0.85em;
-      color: #666;
-      margin: 8px 0;
+
+    .current-winner-border {
+      border: 3.5px solid #28a745 !important;
+      box-shadow: 0 0 12px #28a745;
     }
+
     .corner-label {
-      font-size: 0.95em;
+      font-size: clamp(0.9rem, 3.2vw, 1rem);
       line-height: 1.3;
       white-space: pre;
     }
 
-    /* Mobile-first adjustments – Pixel 9 portrait ~412px wide */
     @media (max-width: 480px) {
-      body {
-        padding: 12px 6px;
-      }
-      h1 {
-        font-size: 1.4em;
-        margin-bottom: 10px;
-      }
-      table {
-        font-size: 0.82em;
-      }
-      th, td {
-        padding: 5px 3px;
-      }
-      .row-label {
-        min-width: 22px;
-        font-size: 0.88em;
-      }
-      #controls {
-        flex-direction: column;
-        gap: 8px;
-      }
-      #controls input, #controls button {
-        width: 100%;
-        max-width: 320px;
-      }
-      #scoreDisplay {
-        font-size: 1.2em;
-      }
-      .quarter-label {
-        font-size: 0.6em;
-        padding: 1px 2px;
-      }
-      .corner-label {
-        font-size: 0.9em;
-      }
+      body { padding: 12px 6px; }
+      h1 { font-size: 1.4em; margin-bottom: 10px; }
+      table { font-size: 0.82em; }
+      th, td { padding: 5px 3px; }
+      .row-label { width: 24px; min-width: 24px; font-size: 0.88em; }
+      #controls { flex-direction: column; gap: 8px; }
+      #controls input, #controls button { width: 100%; max-width: 320px; }
+      #scoreDisplay { font-size: 1.2em; }
+      .quarter-label { font-size: 0.6em; padding: 1px 2px; }
+      .corner-label { font-size: 0.9em; }
     }
 
     @media (max-width: 360px) {
-      table {
-        font-size: 0.78em;
-      }
-      th, td {
-        padding: 4px 2px;
-      }
+      table { font-size: 0.78em; }
+      th, td { padding: 4px 2px; }
     }
   </style>
 </head>
@@ -234,13 +233,11 @@
 
     const table = document.getElementById("gridTable");
 
-    // Top-left corner – will be updated with short team names
     const cornerTh = document.createElement("th");
     cornerTh.className = "header corner-label";
     cornerTh.id = "cornerLabel";
     cornerTh.innerHTML = "Loading...";
 
-    // Build column headers
     const colHeaderRow = document.createElement("tr");
     colHeaderRow.appendChild(cornerTh);
     colOrder.forEach(colNum => {
@@ -251,7 +248,6 @@
     });
     table.appendChild(colHeaderRow);
 
-    // Build data rows
     rowOrder.forEach(row => {
       const tr = document.createElement("tr");
       const rowTh = document.createElement("th");
@@ -272,7 +268,6 @@
       table.appendChild(tr);
     });
 
-    // Find name from grid
     function getNameFromSquare(rowDigit, colDigit) {
       const row = parseInt(rowDigit);
       const col = parseInt(colDigit);
@@ -280,7 +275,6 @@
       return gridMap[key] || "(empty)";
     }
 
-    // Fetch and update
     async function updateGame() {
       const gameId = document.getElementById("gameId")?.value?.trim() || DEFAULT_GAME_ID;
       document.getElementById("status").textContent = "Refreshing...";
@@ -302,17 +296,13 @@
         const homeName = home.team?.abbreviation || home.team?.displayName?.slice(0,3).toUpperCase() || "HOME";
         const awayName = away.team?.abbreviation || away.team?.displayName?.slice(0,3).toUpperCase() || "AWAY";
 
-        // Update corner label with 3-letter codes
-        document.getElementById("cornerLabel").innerHTML = 
-          `${awayName} →<br>↓ ${homeName}`;
+        document.getElementById("cornerLabel").innerHTML = `${awayName} →<br>↓ ${homeName}`;
 
         document.getElementById("scoreDisplay").textContent = 
           `${awayName} ${awayScore} – ${homeScore} ${homeName}`;
 
-        // Clear previous quarter labels
         document.querySelectorAll("#gridTable td .quarter-label").forEach(el => el.remove());
 
-        // Quarter-by-quarter (only if data exists)
         const homeQuarters = home.linescores || [];
         const awayQuarters = away.linescores || [];
 
@@ -343,7 +333,6 @@
 
             html += `${qLabel}: ${awayName} ${awayScoreText} – ${homeName} ${homeScoreText} → ${winnerName}<br>`;
 
-            // Add label inside winning cell
             document.querySelectorAll("#gridTable td").forEach(cell => {
               if (parseInt(cell.dataset.row) === awayLast && parseInt(cell.dataset.col) === homeLast) {
                 const label = document.createElement("span");
@@ -357,7 +346,6 @@
 
         document.getElementById("quarterWinners").innerHTML = html;
 
-        // Pulsate + green border for current winner
         document.querySelectorAll(".pulsate, .current-winner-border").forEach(el => {
           el.classList.remove("pulsate", "current-winner-border");
         });
@@ -368,7 +356,6 @@
           }
         });
 
-        // Refresh time
         const now = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
         document.getElementById("status").textContent = `Last refresh: ${now}`;
 
@@ -378,13 +365,8 @@
       }
     }
 
-    // Initial load
     updateGame();
-
-    // Auto-refresh every 10 seconds
     setInterval(updateGame, 10000);
-
-    // Manual refresh
     document.getElementById("refreshBtn").addEventListener("click", updateGame);
   </script>
 
