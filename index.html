@@ -6,7 +6,7 @@
   <title>Super Bowl Squares - Live Update</title>
   <style>
     :root {
-      --cell-size: clamp(28px, 8.5vw, 48px);   /* square size – fits 11 columns + labels */
+      --cell-size: clamp(48px, 8.5vw, 96px);   /* square size – fits 11 columns + labels */
       --gap: 1px;
     }
 
@@ -204,38 +204,128 @@
   <script>
     const DEFAULT_GAME_ID = "401772987";
 
-    const gridMap = {
-      "4-1": "Harry", "4-4": "Hermione", "4-7": "Ron", "4-2": "Ginny",
-      "4-9": "Luna", "4-6": "Neville", "4-8": "Dudley", "4-3": "Ginny",
-      "4-0": "Arthur", "4-5": "Kreacher",
-      "0-1": "Padma", "0-4": "Parvati", "0-7": "Kingsley", "0-2": "Seamus",
-      "0-9": "Dean", "0-6": "Viktor", "0-8": "Hermione", "0-3": "Draco",
-      "0-0": "Sybill", "0-5": "Harry",
-      "2-1": "Molly", "2-4": "Arthur", "2-7": "George", "2-2": "Ron",
-      "2-9": "Bill", "2-6": "Minerva", "2-8": "Hagrid", "2-3": "Luna",
-      "2-0": "Percy", "2-5": "Padma",
-      "5-1": "Cho", "5-4": "Charlie", "5-7": "Dudley", "5-2": "Sybill",
-      "5-9": "Harry", "5-6": "Lavender", "5-8": "Neville", "5-3": "Cho",
-      "5-0": "Hermione", "5-5": "Teddy",
-      "1-1": "Seamus", "1-4": "Fleur", "1-7": "Nicholas", "1-2": "Hermione",
-      "1-9": "Draco", "1-6": "Parvati", "1-8": "Cho", "1-3": "Ron",
-      "1-0": "Molly", "1-5": "Neville",
-      "8-1": "Ginny", "8-4": "Kingsley", "8-7": "Luna", "8-2": "Molly",
-      "8-9": "Arthur", "8-6": "Ginny", "8-8": "Percy", "8-3": "George",
-      "8-0": "Viktor", "8-5": "Seamus",
-      "6-1": "Viktor", "6-4": "Peeves", "6-7": "Teddy", "6-2": "Ron",
-      "6-9": "Padma", "6-6": "Fleur", "6-8": "Hermione", "6-3": "Harry",
-      "6-0": "Minerva", "6-5": "Dudley",
-      "3-1": "Charlie", "3-4": "Hermione", "3-7": "Hagrid", "3-2": "Neville",
-      "3-9": "Harry", "3-6": "Grawp", "3-8": "Dean", "3-3": "Aberforth",
-      "3-0": "Parvati", "3-5": "Hermione",
-      "9-1": "Dean", "9-4": "Harry", "9-7": "Ginny", "9-2": "Kreacher",
-      "9-9": "Seamus", "9-6": "Aberforth", "9-8": "Charlie", "9-3": "Draco",
-      "9-0": "Luna", "9-5": "Dean",
-      "7-1": "Neville", "7-4": "Horace", "7-7": "Dean", "7-2": "Ginny",
-      "7-9": "Ron", "7-6": "Luna", "7-8": "Hermione", "7-3": "Fleur",
-      "7-0": "Arthur", "7-5": "Ginny"
-    };
+const gridMap = {
+  // Row 4
+  "4-1": "HAR",
+  "4-4": "HER",
+  "4-7": "RON",
+  "4-2": "GIN",
+  "4-9": "LUN",
+  "4-6": "NEV",
+  "4-8": "DUD",
+  "4-3": "GIN",
+  "4-0": "ART",
+  "4-5": "KRE",
+
+  // Row 0
+  "0-1": "PAD",
+  "0-4": "PAR",
+  "0-7": "KIN",
+  "0-2": "SEA",
+  "0-9": "DEA",
+  "0-6": "VIK",
+  "0-8": "HER",
+  "0-3": "DRA",
+  "0-0": "SYB",
+  "0-5": "HAR",
+
+  // Row 2
+  "2-1": "MOL",
+  "2-4": "ART",
+  "2-7": "GEO",
+  "2-2": "RON",
+  "2-9": "BIL",
+  "2-6": "MIN",
+  "2-8": "HAG",
+  "2-3": "LUN",
+  "2-0": "PER",
+  "2-5": "PAD",
+
+  // Row 5
+  "5-1": "CHO",
+  "5-4": "CHA",
+  "5-7": "DUD",
+  "5-2": "SYB",
+  "5-9": "HAR",
+  "5-6": "LAV",
+  "5-8": "NEV",
+  "5-3": "CHO",
+  "5-0": "HER",
+  "5-5": "TED",
+
+  // Row 1
+  "1-1": "SEA",
+  "1-4": "FLE",
+  "1-7": "NIC",
+  "1-2": "HER",
+  "1-9": "DRA",
+  "1-6": "PAR",
+  "1-8": "CHO",
+  "1-3": "RON",
+  "1-0": "MOL",
+  "1-5": "NEV",
+
+  // Row 8
+  "8-1": "GIN",
+  "8-4": "KIN",
+  "8-7": "LUN",
+  "8-2": "MOL",
+  "8-9": "ART",
+  "8-6": "GIN",
+  "8-8": "PER",
+  "8-3": "GEO",
+  "8-0": "VIK",
+  "8-5": "SEA",
+
+  // Row 6
+  "6-1": "VIK",
+  "6-4": "PEE",
+  "6-7": "TED",
+  "6-2": "RON",
+  "6-9": "PAD",
+  "6-6": "FLE",
+  "6-8": "HER",
+  "6-3": "HAR",
+  "6-0": "MIN",
+  "6-5": "DUD",
+
+  // Row 3
+  "3-1": "CHA",
+  "3-4": "HER",
+  "3-7": "HAG",
+  "3-2": "NEV",
+  "3-9": "HAR",
+  "3-6": "GRA",
+  "3-8": "DEA",
+  "3-3": "ABE",
+  "3-0": "PAR",
+  "3-5": "HER",
+
+  // Row 9
+  "9-1": "DEA",
+  "9-4": "HAR",
+  "9-7": "GIN",
+  "9-2": "KRE",
+  "9-9": "SEA",
+  "9-6": "ABE",
+  "9-8": "CHA",
+  "9-3": "DRA",
+  "9-0": "LUN",
+  "9-5": "DEA",
+
+  // Row 7
+  "7-1": "NEV",
+  "7-4": "HOR",
+  "7-7": "DEA",
+  "7-2": "GIN",
+  "7-9": "RON",
+  "7-6": "LUN",
+  "7-8": "HER",
+  "7-3": "FLE",
+  "7-0": "ART",
+  "7-5": "GIN"
+};
+
 
     const rowOrder = [4, 0, 2, 5, 1, 8, 6, 3, 9, 7];
     const colOrder = [1, 4, 7, 2, 9, 6, 8, 3, 0, 5];
@@ -346,7 +436,7 @@
               if (parseInt(cell.dataset.row) === awayLast && parseInt(cell.dataset.col) === homeLast) {
                 const label = document.createElement("span");
                 label.className = "quarter-label";
-                label.textContent = `${qLabel} Winner`;
+                label.textContent = `${qLabel} Win`;
                 cell.appendChild(label);
               }
             });
