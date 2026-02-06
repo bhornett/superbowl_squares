@@ -395,7 +395,16 @@ const gridMap = {
         const homeName = home.team?.abbreviation || home.team?.displayName?.slice(0,3).toUpperCase() || "HOME";
         const awayName = away.team?.abbreviation || away.team?.displayName?.slice(0,3).toUpperCase() || "AWAY";
 
-        document.getElementById("cornerLabel").innerHTML = `${awayName} →<br>↓ ${homeName}`;
+       
+		document.getElementById("cornerLabel").innerHTML = `
+		  <div style="font-size:0.75em; line-height:1.2;">
+			${awayName} →
+		  </div>
+		  <div style="font-size:0.75em; line-height:1.2;">
+			↓ ${homeName}
+		  </div>
+		`;
+
 
         document.getElementById("scoreDisplay").textContent = 
           `${awayName} ${awayScore} – ${homeScore} ${homeName}`;
