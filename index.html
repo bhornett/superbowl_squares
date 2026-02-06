@@ -142,67 +142,43 @@
     });
 
     async function processGrid(ctx) {
-        try {
-            setStatus("Initializing OCR worker...", 'processing');
+    try {
+        // ... worker creation ...
 
-			const worker = await Tesseract.createWorker('eng', 1, {
-				workerPath: './lib/worker.min.js',
-				langPath: './lib',                    // folder containing eng.traineddata.gz
-				corePath: './lib/tesseract-core.wasm.js',
-				tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
-				tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz -.,\'’',
-				preserve_interword_spaces: '1',
-				// Optional: cacheMethod: 'none'  // if you see traineddata caching issues later
-			});
+        setStatus("OCR ready. Processing cells...", 'processing');
 
-            setStatus("OCR ready. Processing cells...", 'processing');
+        const cellWidth  = ctx.canvas.width  / TOTAL_DIVISIONS;
+        const cellHeight = ctx.canvas.height / TOTAL_DIVISIONS;
 
-            const cellWidth  = ctx.canvas.width  / TOTAL_DIVISIONS;
-            const cellHeight = ctx.canvas.height / TOTAL_DIVISIONS;
+        for (let row = 1; row < TOTAL_DIVISIONS; row++) {
+            setStatus(`Processing row ${row} of ${GRID_CELLS}...`, 'processing');
+            for (let col = 1; col < TOTAL_DIVISIONS; col++) {
+                // ... tempCanvas creation and drawImage ...
 
-            for (let row = 1; row < TOTAL_DIVISIONS; row++) {
-                setStatus(`Processing row ${row} of ${GRID_CELLS}...`, 'processing');
-                for (let col = 1; col < TOTAL_DIVISIONS; col++) {
-                    const gridRow = row - 1;
-                    const gridCol = col - 1;
-
-                    const x = col * cellWidth;
-                    const y = row * cellHeight;
-
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width  = Math.floor(cellWidth);
-                    tempCanvas.height = Math.floor(cellHeight);
-                    const tempCtx = tempCanvas.getContext('2d');
-
-                    tempCtx.drawImage(
-                        ctx.canvas,
-                        x, y, cellWidth, cellHeight,
-                        0, 0, tempCanvas.width, tempCanvas.height
-                    );
-
-                    try {
-                        const { data: { text } } = await worker.recognize(tempCanvas);
-                        let cleaned = text.trim()
-                                          .replace(/\s+/g, ' ')
-                                          .replace(/\n/g, ' ');
-                        grid[gridRow][gridCol] = cleaned || '?';
-                    } catch (err) {
-                        console.error(`Cell [${gridRow+1},${gridCol+1}] OCR failed:`, err);
-                        grid[gridRow][gridCol] = '!';
-                    }
+                try {
+                    const { data: { text } } = await worker.recognize(tempCanvas);
+                    let cleaned = text.trim().replace(/\s+/g, ' ').replace(/\n/g, ' ');
+                    grid[gridRow][gridCol] = cleaned || '?';
+                    console.log(`Cell [${gridRow+1},${gridCol+1}]: "${cleaned}"`);  // ← add this for debug
+                } catch (cellErr) {
+                    console.error(`Cell [${gridRow+1},${gridCol+1}] failed:`, cellErr);
+                    grid[gridRow][gridCol] = '!';
                 }
             }
-
-            await worker.terminate();
-
-            setStatus("Done! Results below.", 'success');
-            displayResults();
-
-        } catch (err) {
-            console.error("OCR setup/processing failed:", err);
-            setStatus(`OCR error: ${err.message || 'Failed to initialize Tesseract worker'}. This is often a network/CDN issue — try refreshing or a different browser.`, 'error');
         }
+
+        console.log("All cells processed. Grid:", grid);  // ← debug
+
+        await worker.terminate().catch(err => console.warn("Terminate warning:", err));
+
+        setStatus("Done! Results below.", 'success');
+        displayResults();  // Ensure this is called
+
+    } catch (err) {
+        console.error("Full processGrid error:", err);
+        setStatus(`Processing failed: ${err.message || 'Unknown issue'}. Check console for details.`, 'error');
     }
+}
 
     // displayResults() function remains the same as in the previous version
     function displayResults() {
