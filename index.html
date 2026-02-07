@@ -54,6 +54,8 @@
       max-width: 300px;
       margin: 0 auto;
     }
+	
+
 
     #controls button {
       background: #27ae60;
@@ -159,7 +161,9 @@
       border-radius: 3px;
       padding: 1px 2px;
       white-space: nowrap;
+	  pointer-events: none;
     }
+
 
     .pulsate {
       animation: pulsate 2s infinite ease-in-out;
@@ -217,7 +221,7 @@
   <table id="gridTable"></table>
 
   <script>
-    const DEFAULT_GAME_ID = "401772988";
+    const DEFAULT_GAME_ID = "401772986";
 
 const gridMap = {
   // Row 2
@@ -289,38 +293,15 @@ const gridMap = {
       rowTh.className = "header row-label";
       tr.appendChild(rowTh);
 	  
-	  let selectedName = null;
 
-document.querySelectorAll("#gridTable td").forEach(cell => {
-  cell.addEventListener("click", () => {
-    const name = cell.textContent.trim();
 
-    // Clear existing highlights
-    document.querySelectorAll(".name-highlight").forEach(c =>
-      c.classList.remove("name-highlight")
-    );
-
-    // Toggle off if clicking same name again
-    if (selectedName === name) {
-      selectedName = null;
-      return;
-    }
-
-    selectedName = name;
-
-    // Highlight all matching cells
-    document.querySelectorAll("#gridTable td").forEach(c => {
-      if (c.textContent.trim() === name) {
-        c.classList.add("name-highlight");
-      }
-    });
-  });
-});
 
       colOrder.forEach(col => {
         const key = `${row}-${col}`;
         const td = document.createElement("td");
-        td.textContent = gridMap[key] || "(empty)";
+        const name = gridMap[key] || "(empty)";
+		td.textContent = name;
+		td.dataset.name = name;
         if (!gridMap[key]) td.className = "empty";
         td.dataset.row = row;
         td.dataset.col = col;
@@ -328,6 +309,34 @@ document.querySelectorAll("#gridTable td").forEach(cell => {
       });
 
       table.appendChild(tr);
+	  	let selectedName = null;
+
+document.querySelectorAll("#gridTable td").forEach(cell => {
+  cell.addEventListener("click", () => {
+    const name = cell.dataset.name;
+
+    // Clear existing highlights
+    document.querySelectorAll("#gridTable td").forEach(c =>
+      c.classList.remove("name-highlight")
+    );
+
+    // Toggle off if clicking same name
+    if (selectedName === name) {
+      selectedName = null;
+      return;
+    }
+
+    selectedName = name;
+
+    // Highlight all matching names
+    document.querySelectorAll("#gridTable td").forEach(c => {
+      if (c.dataset.name === name) {
+        c.classList.add("name-highlight");
+      }
+    });
+  });
+});
+	  
     });
 
     function getNameFromSquare(rowDigit, colDigit) {
