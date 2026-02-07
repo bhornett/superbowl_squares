@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>2026 Super Bowl Squares</title>
   <style>
     :root {
@@ -124,6 +124,11 @@
 	.item-inline {
   display: inline-block; /* Allows elements to sit side-by-side */
   vertical-align: middle; /* Vertically centers elements relative to each other */
+}
+
+.name-highlight {
+  font-weight: bold;
+  background: rgba(0, 0, 0, 0.15);
 }
 
     .header {
@@ -283,6 +288,34 @@ const gridMap = {
       rowTh.textContent = row;
       rowTh.className = "header row-label";
       tr.appendChild(rowTh);
+	  
+	  let selectedName = null;
+
+document.querySelectorAll("#gridTable td").forEach(cell => {
+  cell.addEventListener("click", () => {
+    const name = cell.textContent.trim();
+
+    // Clear existing highlights
+    document.querySelectorAll(".name-highlight").forEach(c =>
+      c.classList.remove("name-highlight")
+    );
+
+    // Toggle off if clicking same name again
+    if (selectedName === name) {
+      selectedName = null;
+      return;
+    }
+
+    selectedName = name;
+
+    // Highlight all matching cells
+    document.querySelectorAll("#gridTable td").forEach(c => {
+      if (c.textContent.trim() === name) {
+        c.classList.add("name-highlight");
+      }
+    });
+  });
+});
 
       colOrder.forEach(col => {
         const key = `${row}-${col}`;
@@ -389,7 +422,12 @@ const gridMap = {
           }
         });
 
-        const now = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+        const now = new Date().toLocaleTimeString("en-US", {
+  hour: "numeric",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: true
+});
         document.getElementById("status").textContent = `Last refresh: ${now}`;
 
       } catch (err) {
