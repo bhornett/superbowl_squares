@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Super Bowl Squares - Live Update</title>
+  <title>Super Bowl Squares</title>
   <style>
     :root {
       --cell-size: clamp(24px, 8.5vw, 48px);   /* square size – fits 11 columns + labels */
@@ -165,8 +165,8 @@
     }
 
     .corner-label {
-      font-size: clamp(0.25rem, 1vw, 0.25rem);
-      line-height: 1.3;
+      font-size: 0.7em !important;
+      line-height: 1.15;
       white-space: pre;
     }
 
@@ -186,15 +186,16 @@
 </head>
 <body>
 
-  <h1>Super Bowl Squares - Live Update</h1>
+  <h1>Super Bowl Squares</h1>
 
-  <div id="controls">
+<!--
+	<div id="controls">
     <input type="text" id="gameId" value="401772987" placeholder="Enter ESPN Game ID">
     <button id="refreshBtn">Refresh Now</button>
   </div>
 
   <div id="info">Auto-refreshing every 10 seconds</div>
-
+-->
   <div id="scoreDisplay">Score: —</div>
   <div id="quarterWinners"></div>
   <div id="status">Loading game data...</div>
@@ -409,7 +410,7 @@ const gridMap = {
         let html = "";
 
         if (homeQuarters.length > 0 || awayQuarters.length > 0) {
-          html = "<strong>Quarter-by-Quarter Grid Winners:</strong><br>";
+          html = "<strong>Quarter Winners:</strong><br>";
           let cumulativeHome = 0;
           let cumulativeAway = 0;
 
@@ -467,7 +468,7 @@ const gridMap = {
 
     updateGame();
     setInterval(updateGame, 10000);
-    document.getElementById("refreshBtn").addEventListener("click", updateGame);
+    <!-- document.getElementById("refreshBtn").addEventListener("click", updateGame); -->
   </script>
 
 </body>
