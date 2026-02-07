@@ -21,6 +21,10 @@
       -webkit-text-size-adjust: 100%;
       touch-action: manipulation;
     }
+	
+	div:empty {
+  display: none !important;
+}
 
     h1 {
       color: #2c3e50;
@@ -77,6 +81,8 @@
       font-weight: bold;
       margin: 8px auto;
       color: #2c3e50;
+	  display: flex;
+	  align-items: center; /* Centers vertically */
     }
 
     #quarterWinners {
@@ -118,6 +124,11 @@
         padding: 3px;
       }
     }
+	
+	.item-inline {
+  display: inline-block; /* Allows elements to sit side-by-side */
+  vertical-align: middle; /* Vertically centers elements relative to each other */
+}
 
     .header {
       background: #2c3e50;
@@ -152,6 +163,8 @@
     .pulsate {
       animation: pulsate 2s infinite ease-in-out;
       font-weight: bold;
+	  background: #28a745;
+	  color: #FFFFFF;
     }
 
     @keyframes pulsate {
@@ -196,14 +209,14 @@
 
   <div id="info">Auto-refreshing every 10 seconds</div>
 -->
-  <div id="scoreDisplay">Score: —</div>
+  <div id="scoreDisplay"></div>
   <div id="quarterWinners"></div>
   <div id="status">Loading game data...</div>
 
   <table id="gridTable"></table>
 
   <script>
-    const DEFAULT_GAME_ID = "401772987";
+    const DEFAULT_GAME_ID = "401772988";
 
 const gridMap = {
   // Row 4
@@ -395,12 +408,15 @@ const gridMap = {
         const awayScore = away.score || 0;
         const homeName = home.team?.abbreviation || home.team?.displayName?.slice(0,3).toUpperCase() || "HOME";
         const awayName = away.team?.abbreviation || away.team?.displayName?.slice(0,3).toUpperCase() || "AWAY";
+		const homeLogoUrl = home.team?.logos?.[0].href;
+		const awayLogoUrl = away.team?.logos?.[0].href;
 
         document.getElementById("cornerLabel").innerHTML = `${awayName} →<br>↓ ${homeName}`;
 
 
-        document.getElementById("scoreDisplay").textContent = 
-          `${awayName} ${awayScore} – ${homeScore} ${homeName}`;
+        //document.getElementById("scoreDisplay").textContent = 
+        //  `${awayName} ${awayScore} –  ${homeScore} ${homeName}`;
+		 document.getElementById("scoreDisplay").innerHTML = `<img src="${awayLogoUrl}" width=50 height=50 class="item-inline"><span class="item-inline">${awayName} ${awayScore} –  ${homeScore} ${homeName}</span><img src="${homeLogoUrl}" width=50 height=50 class="item-inline">`;
 
         document.querySelectorAll("#gridTable td .quarter-label").forEach(el => el.remove());
 
