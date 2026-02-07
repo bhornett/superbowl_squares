@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Super Bowl Squares</title>
+  <title>2026 Super Bowl Squares</title>
   <style>
     :root {
       --cell-size: clamp(24px, 8.5vw, 48px);   /* square size – fits 11 columns + labels */
@@ -14,7 +14,7 @@
 
     body {
       font-family: Arial, Helvetica, sans-serif;
-      background: #f8f9fa;
+      background: #FF991C;
       margin: 0;
       padding: 12px 6px;
       text-align: center;
@@ -22,10 +22,6 @@
       touch-action: manipulation;
     }
 	
-	div:empty {
-  display: none !important;
-}
-
     h1 {
       color: #2c3e50;
       margin: 0 0 10px;
@@ -199,7 +195,7 @@
 </head>
 <body>
 
-  <h1>Super Bowl Squares</h1>
+  <h1>2026 Super Bowl Squares</h1>
 
 <!--
 	<div id="controls">
@@ -219,130 +215,50 @@
     const DEFAULT_GAME_ID = "401772988";
 
 const gridMap = {
-  // Row 4
-  "4-1": "HAR",
-  "4-4": "HER",
-  "4-7": "RON",
-  "4-2": "GIN",
-  "4-9": "LUN",
-  "4-6": "NEV",
-  "4-8": "DUD",
-  "4-3": "GIN",
-  "4-0": "ART",
-  "4-5": "KRE",
-
-  // Row 0
-  "0-1": "PAD",
-  "0-4": "PAR",
-  "0-7": "KIN",
-  "0-2": "SEA",
-  "0-9": "DEA",
-  "0-6": "VIK",
-  "0-8": "HER",
-  "0-3": "DRA",
-  "0-0": "SYB",
-  "0-5": "HAR",
-
   // Row 2
-  "2-1": "MOL",
-  "2-4": "ART",
-  "2-7": "GEO",
-  "2-2": "RON",
-  "2-9": "BIL",
-  "2-6": "MIN",
-  "2-8": "HAG",
-  "2-3": "LUN",
-  "2-0": "PER",
-  "2-5": "PAD",
-
-  // Row 5
-  "5-1": "CHO",
-  "5-4": "CHA",
-  "5-7": "DUD",
-  "5-2": "SYB",
-  "5-9": "HAR",
-  "5-6": "LAV",
-  "5-8": "NEV",
-  "5-3": "CHO",
-  "5-0": "HER",
-  "5-5": "TED",
-
-  // Row 1
-  "1-1": "SEA",
-  "1-4": "FLE",
-  "1-7": "NIC",
-  "1-2": "HER",
-  "1-9": "DRA",
-  "1-6": "PAR",
-  "1-8": "CHO",
-  "1-3": "RON",
-  "1-0": "MOL",
-  "1-5": "NEV",
-
-  // Row 8
-  "8-1": "GIN",
-  "8-4": "KIN",
-  "8-7": "LUN",
-  "8-2": "MOL",
-  "8-9": "ART",
-  "8-6": "GIN",
-  "8-8": "PER",
-  "8-3": "GEO",
-  "8-0": "VIK",
-  "8-5": "SEA",
+  "2-1": "DeD", "2-6": "AT",  "2-2": "EL",  "2-5": "CW",  "2-8": "EL",
+  "2-7": "RT",  "2-9": "JD",  "2-3": "DP",  "2-4": "TB",  "2-0": "DM",
 
   // Row 6
-  "6-1": "VIK",
-  "6-4": "PEE",
-  "6-7": "TED",
-  "6-2": "RON",
-  "6-9": "PAD",
-  "6-6": "FLE",
-  "6-8": "HER",
-  "6-3": "HAR",
-  "6-0": "MIN",
-  "6-5": "DUD",
-
-  // Row 3
-  "3-1": "CHA",
-  "3-4": "HER",
-  "3-7": "HAG",
-  "3-2": "NEV",
-  "3-9": "HAR",
-  "3-6": "GRA",
-  "3-8": "DEA",
-  "3-3": "ABE",
-  "3-0": "PAR",
-  "3-5": "HER",
-
-  // Row 9
-  "9-1": "DEA",
-  "9-4": "HAR",
-  "9-7": "GIN",
-  "9-2": "KRE",
-  "9-9": "SEA",
-  "9-6": "ABE",
-  "9-8": "CHA",
-  "9-3": "DRA",
-  "9-0": "LUN",
-  "9-5": "DEA",
+  "6-1": "DeD", "6-6": "DM",  "6-2": "DeD", "6-5": "CD",  "6-8": "Reg",
+  "6-7": "ES",  "6-9": "JH",  "6-3": "RD",  "6-4": "CS",  "6-0": "TM",
 
   // Row 7
-  "7-1": "NEV",
-  "7-4": "HOR",
-  "7-7": "DEA",
-  "7-2": "GIN",
-  "7-9": "RON",
-  "7-6": "LUN",
-  "7-8": "HER",
-  "7-3": "FLE",
-  "7-0": "ART",
-  "7-5": "GIN"
+  "7-1": "ES",  "7-6": "DB",  "7-2": "TB",  "7-5": "EL",  "7-8": "MH",
+  "7-7": "StB", "7-9": "SA",  "7-3": "RoD", "7-4": "RB",  "7-0": "CD",
+
+  // Row 8
+  "8-1": "RT",  "8-6": "RB",  "8-2": "SB",  "8-5": "RB",  "8-8": "ED",
+  "8-7": "RB",  "8-9": "ES",  "8-3": "DeD", "8-4": "RB",  "8-0": "DeD",
+
+  // Row 5
+  "5-1": "MT",  "5-6": "RT",  "5-2": "ES",  "5-5": "SB",  "5-8": "GT",
+  "5-7": "LD",  "5-9": "RD",  "5-3": "MT",  "5-4": "AD",  "5-0": "BC",
+
+  // Row 3
+  "3-1": "ES",  "3-6": "SD",  "3-2": "AT",  "3-5": "DD",  "3-8": "SB",
+  "3-7": "LD",  "3-9": "CP",  "3-3": "RoD", "3-4": "TM",  "3-0": "FD",
+
+  // Row 1
+  "1-1": "MC",  "1-6": "HW",  "1-2": "RoD", "1-5": "EB",  "1-8": "BC",
+  "1-7": "HP",  "1-9": "EL",  "1-3": "DM",  "1-4": "BD",  "1-0": "MH",
+
+  // Row 0
+  "0-1": "EB",  "0-6": "EL",  "0-2": "SD",  "0-5": "JD",  "0-8": "CW",
+  "0-7": "TM",  "0-9": "MC",  "0-3": "AP",  "0-4": "SB",  "0-0": "LB",
+
+  // Row 4
+  "4-1": "SB",  "4-6": "RD",  "4-2": "SC",  "4-5": "JD",  "4-8": "StB",
+  "4-7": "CD",  "4-9": "EB",  "4-3": "SC",  "4-4": "RoD", "4-0": "BH",
+
+  // Row 9
+  "9-1": "DM",  "9-6": "DM",  "9-2": "RoD", "9-5": "CW",  "9-8": "SA",
+  "9-7": "ED",  "9-9": "BH",  "9-3": "RD",  "9-4": "AD",  "9-0": "CD"
 };
 
 
-    const rowOrder = [4, 0, 2, 5, 1, 8, 6, 3, 9, 7];
-    const colOrder = [1, 4, 7, 2, 9, 6, 8, 3, 0, 5];
+    const rowOrder = [2, 6, 7, 8, 5, 3, 1, 0, 4, 9];
+    const colOrder = [1, 6, 2, 5, 8, 7, 9, 3, 4, 0];
 
     const table = document.getElementById("gridTable");
 
