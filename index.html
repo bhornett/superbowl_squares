@@ -221,7 +221,7 @@
   <table id="gridTable"></table>
 
   <script>
-    const DEFAULT_GAME_ID = "401772987";
+    const DEFAULT_GAME_ID = "401772988";
 
 const gridMap = {
   // Row 2
@@ -351,8 +351,8 @@ document.querySelectorAll("#gridTable td").forEach(cell => {
       document.getElementById("status").textContent = "Refreshing...";
 
       try {
-        //const url = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`;
-		const url = "https://gist.githubusercontent.com/bhornett/bf63a0c40fa25f91dfd176cad095f06b/raw/5e3011d78745ab42f4f1d210ad740c5e16fac748/data.json"
+        const url = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`;
+		//const url = "https://gist.githubusercontent.com/bhornett/bf63a0c40fa25f91dfd176cad095f06b/raw/5e3011d78745ab42f4f1d210ad740c5e16fac748/data.json"
 		
         const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
