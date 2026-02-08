@@ -221,7 +221,7 @@
   <table id="gridTable"></table>
 
   <script>
-    const DEFAULT_GAME_ID = "401772986";
+    const DEFAULT_GAME_ID = "401772987";
 
 const gridMap = {
   // Row 2
@@ -351,13 +351,25 @@ document.querySelectorAll("#gridTable td").forEach(cell => {
       document.getElementById("status").textContent = "Refreshing...";
 
       try {
-        const url = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`;
+        //const url = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=${gameId}`;
+		const url = "https://gist.githubusercontent.com/bhornett/bf63a0c40fa25f91dfd176cad095f06b/raw/5e3011d78745ab42f4f1d210ad740c5e16fac748/data.json"
+		
         const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
+		
+		
 
         const comp = data.header?.competitions?.[0] || {};
+		
+		const statusType = comp.status?.type || {};
+		let activeQuarter = null;
+
+		if (statusType.state.toUpperCase() === "IN" && statusType.shortDetail.toUpperCase()?.startsWith("Q")) {
+		  activeQuarter = parseInt(statusType.shortDetail.slice(1), 10);
+		}
+	
         const competitors = comp.competitors || [];
         const home = competitors.find(c => c.homeAway === "home") || {};
         const away = competitors.find(c => c.homeAway === "away") || {};
@@ -376,60 +388,63 @@ document.querySelectorAll("#gridTable td").forEach(cell => {
         //  `${awayName} ${awayScore} –  ${homeScore} ${homeName}`;
 		 document.getElementById("scoreDisplay").innerHTML = `<img src="${awayLogoUrl}" width=50 height=50 class="item-inline"><span class="item-inline">${awayName} ${awayScore} –  ${homeScore} ${homeName}</span><img src="${homeLogoUrl}" width=50 height=50 class="item-inline">`;
 
-        document.querySelectorAll("#gridTable td .quarter-label").forEach(el => el.remove());
+				document.querySelectorAll("#gridTable td .quarter-label").forEach(el => el.remove());
 
-        const homeQuarters = home.linescores || [];
-        const awayQuarters = away.linescores || [];
+				const homeQuarters = home.linescores || [];
+				const awayQuarters = away.linescores || [];
 
-        let html = "";
+		 //  let html = "<strong>Quarter Winners:</strong><br>";
+		 let html ="";
+		  let cumHome = 0, cumAway = 0;
 
-        if (homeQuarters.length > 0 || awayQuarters.length > 0) {
-          html = "<strong>Quarter Winners:</strong><br>";
-          let cumulativeHome = 0;
-          let cumulativeAway = 0;
+		  const completed = Math.min(homeQuarters.length, awayQuarters.length);
 
-          const maxQ = Math.max(homeQuarters.length, awayQuarters.length, 4);
+		  for (let q=0; q<completed; q++) {
+			const qNum = q+1;
 
-          for (let q = 0; q < maxQ; q++) {
-            const homeQ = parseInt(homeQuarters[q]?.displayValue || "0", 10);
-            const awayQ = parseInt(awayQuarters[q]?.displayValue || "0", 10);
+			if (qNum === activeQuarter) {
+			  html += `<em>Q${qNum} in progress…</em><br>`;
+			  break;
+			}
 
-            cumulativeHome += homeQ;
-            cumulativeAway += awayQ;
+			cumHome += parseInt(home.linescores[q].displayValue||0);
+			cumAway += parseInt(away.linescores[q].displayValue||0);
 
-            const qLabel = q < 4 ? `Q${q+1}` : (q === 4 ? "OT" : "Final");
+			const r = cumAway % 10;
+			const c = cumHome % 10;
+			const name = getNameFromSquare(c,r);
+			
+			
+            const awayScoreText = cumAway.toString().slice(0, -1) + `<span class="digit-bold">${r}</span>`;
+            const homeScoreText = cumHome.toString().slice(0, -1) + `<span class="digit-bold">${c}</span>`;
 
-            const awayLast = cumulativeAway % 10;
-            const homeLast = cumulativeHome % 10;
-            const winnerName = getNameFromSquare(awayLast, homeLast);
+            html += `Q${qNum}: ${awayName} ${awayScoreText} – ${homeName} ${homeScoreText} → <strong>${name}</strong><br>`;
 
-            const awayScoreText = cumulativeAway.toString().slice(0, -1) + `<span class="digit-bold">${awayLast}</span>`;
-            const homeScoreText = cumulativeHome.toString().slice(0, -1) + `<span class="digit-bold">${homeLast}</span>`;
+			//html += `Q${qNum}: ${name}<br>`;
 
-            html += `${qLabel}: ${awayName} ${awayScoreText} – ${homeName} ${homeScoreText} → ${winnerName}<br>`;
-
-            document.querySelectorAll("#gridTable td").forEach(cell => {
-              if (parseInt(cell.dataset.row) === awayLast && parseInt(cell.dataset.col) === homeLast) {
-                const label = document.createElement("span");
-                label.className = "quarter-label";
-                label.textContent = `${qLabel} Win`;
-                cell.appendChild(label);
-              }
-            });
-          }
-        }
-
+			document.querySelectorAll("#gridTable td").forEach(cell=>{
+			  if (+cell.dataset.row===c && +cell.dataset.col===r) {
+				const s=document.createElement("span");
+				s.className="quarter-label";
+				s.textContent=`Q${qNum} Win`;
+				cell.appendChild(s);
+			  }
+			});
+		  }
+		  
         document.getElementById("quarterWinners").innerHTML = html;
 
         document.querySelectorAll(".pulsate, .current-winner-border").forEach(el => {
           el.classList.remove("pulsate", "current-winner-border");
         });
 
-        document.querySelectorAll("#gridTable td").forEach(cell => {
-          if (parseInt(cell.dataset.row) === awayScore % 10 && parseInt(cell.dataset.col) === homeScore % 10) {
-            cell.classList.add("pulsate", "current-winner-border");
-          }
-        });
+
+				
+				document.querySelectorAll("#gridTable td").forEach(cell => {
+		  if (parseInt(cell.dataset.row) === homeScore % 10 && parseInt(cell.dataset.col) === awayScore % 10) {
+			cell.classList.add("pulsate", "current-winner-border");
+		  }
+		});
 
         const now = new Date().toLocaleTimeString("en-US", {
   hour: "numeric",
@@ -446,7 +461,7 @@ document.querySelectorAll("#gridTable td").forEach(cell => {
     }
 
     updateGame();
-    setInterval(updateGame, 10000);
+    setInterval(updateGame, 30000);
     <!-- document.getElementById("refreshBtn").addEventListener("click", updateGame); -->
   </script>
 
