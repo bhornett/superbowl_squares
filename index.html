@@ -404,10 +404,7 @@ document.querySelectorAll("#gridTable td").forEach(cell => {
         //document.getElementById("scoreDisplay").textContent = 
         //  `${awayName} ${awayScore} –  ${homeScore} ${homeName}`;
 		 document.getElementById("scoreDisplay").innerHTML = `<img src="${awayLogoUrl}" width=50 height=50 class="item-inline"><span class="item-inline">${awayName} ${awayScore} –  ${homeScore} ${homeName}</span><img src="${homeLogoUrl}" width=50 height=50 class="item-inline">`;
-    if(activeQuarter===null){
-      document.getElementById("quarterWinners").innerHTML="";
-      return;
-    }
+
 				document.querySelectorAll("#gridTable td .quarter-label").forEach(el => el.remove());
 
 				const homeQuarters = home.linescores || [];
